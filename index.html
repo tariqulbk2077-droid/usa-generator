@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USA Data Generator Pro</title>
+    <title>USA Data & Password Gen</title>
     <style>
         :root {
             --bg-color: #0e1621;
             --card-bg: #17212b;
             --primary: #2ea6ff;
+            --secondary: #4caf50;
             --text-main: #ffffff;
             --text-dim: #abaeb2;
         }
@@ -17,28 +18,29 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            padding: 20px;
             margin: 0;
         }
         .container {
             background-color: var(--card-bg);
-            padding: 25px;
+            padding: 20px;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            text-align: center;
-            width: 350px;
+            width: 100%;
+            max-width: 360px;
+            margin-bottom: 20px;
         }
-        .header h2 { margin: 10px 0 5px; color: var(--primary); }
-        .header p { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
+        h2 { color: var(--primary); text-align: center; margin: 10px 0; }
+        .section-title { font-size: 14px; color: var(--text-dim); border-bottom: 1px solid #3d4b5a; padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
         
+        /* Result Box Styles */
         .result-box {
             background: #242f3d;
-            padding: 15px;
+            padding: 10px;
             border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: left;
+            margin-bottom: 15px;
             border: 1px solid #3d4b5a;
         }
         .data-row {
@@ -53,29 +55,33 @@
             transition: 0.2s;
         }
         .data-row:hover { background: #364659; }
-        .data-row:active { transform: scale(0.98); }
-        .label { font-size: 12px; color: #88a6c5; display: block; }
-        .value { font-size: 15px; font-weight: 500; }
-        .copy-icon { font-size: 12px; color: var(--primary); font-weight: bold; }
+        .label { font-size: 11px; color: #88a6c5; display: block; }
+        .value { font-size: 14px; font-weight: 500; word-break: break-all; }
+        .copy-btn { font-size: 10px; color: var(--primary); font-weight: bold; border: 1px solid var(--primary); padding: 2px 5px; border-radius: 4px; }
+
+        /* Password Controls */
+        .controls { margin-bottom: 15px; font-size: 13px; }
+        .control-group { display: flex; justify-content: space-between; margin: 8px 0; }
+        input[type="range"] { width: 100%; margin: 10px 0; }
 
         button {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             width: 100%;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
         }
-        button:hover { background: #1c93e3; }
+        button.pass-btn { background: var(--secondary); margin-top: 10px; }
+        button:active { transform: scale(0.98); }
         
-        /* Toast Notification */
         #toast {
             visibility: hidden;
-            background-color: #4caf50;
+            background-color: var(--secondary);
             color: #fff;
             text-align: center;
             border-radius: 50px;
@@ -83,37 +89,57 @@
             position: fixed;
             bottom: 30px;
             font-size: 14px;
+            z-index: 100;
         }
         #toast.show { visibility: visible; animation: fadeInOut 2s; }
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; }
-            20%, 80% { opacity: 1; }
-        }
+        @keyframes fadeInOut { 0%, 100% { opacity: 0; } 20%, 80% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h2>USA Generator</h2>
-        <p>ট্যাপ করে কপি করুন</p>
+    <h2>USA ToolKit</h2>
+    
+    <div class="section-title">USA Data Generator</div>
+    <div id="usa-result" class="result-box">
+        <div style="text-align:center; padding: 10px; color:#5c6a79;">No data yet</div>
+    </div>
+    <button onclick="generateUSAData()">Generate USA Identity</button>
+
+    <div style="margin-top: 30px;" class="section-title">Secure Password Gen</div>
+    
+    <div class="result-box">
+        <div class="data-row" id="pass-row" onclick="copyText(document.getElementById('pass-val').innerText)">
+            <div>
+                <span class="label">Generated Password</span>
+                <span class="value" id="pass-val">********</span>
+            </div>
+            <span class="copy-btn">COPY</span>
+        </div>
     </div>
 
-    <div id="result-container" class="result-box">
-        <div style="text-align:center; padding: 20px; color:#5c6a79;">No data generated yet.</div>
+    <div class="controls">
+        <div class="control-group">
+            <span>Length: <b id="len-label">12</b></span>
+            <input type="range" id="pass-length" min="6" max="30" value="12" oninput="document.getElementById('len-label').innerText=this.value">
+        </div>
+        <div class="control-group">
+            <label><input type="checkbox" id="include-numbers" checked> Numbers (0-9)</label>
+            <label><input type="checkbox" id="include-symbols" checked> Symbols (!@#)</label>
+        </div>
     </div>
-
-    <button onclick="generate()">Generate New Identity</button>
+    <button class="pass-btn" onclick="generatePassword()">Generate Secure Password</button>
 </div>
 
 <div id="toast">Copied to Clipboard!</div>
 
 <script>
+    // --- USA Data Logic ---
     const firstNames = ["James", "Robert", "John", "Michael", "David", "William"];
     const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller"];
     const cities = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"];
 
-    function generate() {
+    function generateUSAData() {
         const data = {
             Name: firstNames[Math.floor(Math.random() * firstNames.length)] + " " + lastNames[Math.floor(Math.random() * lastNames.length)],
             City: cities[Math.floor(Math.random() * cities.length)],
@@ -121,19 +147,38 @@
             SSN: `${Math.floor(Math.random()*900+100)}-${Math.floor(Math.random()*90+10)}-${Math.floor(Math.random()*9000+1000)}`
         };
 
-        const container = document.getElementById('result-container');
+        const container = document.getElementById('usa-result');
         container.innerHTML = Object.entries(data).map(([key, val]) => `
             <div class="data-row" onclick="copyText('${val}')">
                 <div>
                     <span class="label">${key}</span>
                     <span class="value">${val}</span>
                 </div>
-                <span class="copy-icon">COPY</span>
+                <span class="copy-btn">COPY</span>
             </div>
         `).join('');
     }
 
+    // --- Password Logic ---
+    function generatePassword() {
+        const length = document.getElementById('pass-length').value;
+        const incNum = document.getElementById('include-numbers').checked;
+        const incSym = document.getElementById('include-symbols').checked;
+        
+        let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if (incNum) chars += "0123456789";
+        if (incSym) chars += "!@#$%^&*()_+~`|}{[]:;?><,./-=";
+        
+        let password = "";
+        for (let i = 0; i < length; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('pass-val').innerText = password;
+    }
+
+    // --- Global Copy Logic ---
     function copyText(text) {
+        if(text.includes('*') || text === "No data yet") return;
         navigator.clipboard.writeText(text).then(() => {
             const toast = document.getElementById("toast");
             toast.className = "show";
@@ -144,4 +189,3 @@
 
 </body>
 </html>
-
