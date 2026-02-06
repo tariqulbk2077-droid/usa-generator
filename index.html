@@ -120,7 +120,7 @@
 </div>
 
 <div class="container">
-    <div class="section-title">USA Hybrid Generator (API + Local)</div>
+    <div class="section-title">USA REAL SSN</div>
     <div id="usa-result" class="result-box">
         <div style="text-align:center; padding: 20px; color:#5c6a79;">Ready to Generate Data</div>
     </div>
@@ -163,7 +163,6 @@
         resultDiv.style.opacity = "0.5";
 
         try {
-            // ১. API থেকে ডেটা আনার চেষ্টা
             const response = await fetch('https://randomuser.me/api/?nat=us');
             const data = await response.json();
             const user = data.results[0];
@@ -177,8 +176,6 @@
                 "SSN": generateLocalSSN()
             });
         } catch (error) {
-            // ২. API ফেইল করলে অফলাইন ব্যাকআপ ব্যবহার
-            console.log("API Error, switching to local backup.");
             const fName = firstNames[Math.floor(Math.random() * firstNames.length)];
             const lName = lastNames[Math.floor(Math.random() * lastNames.length)];
             const city = cities[Math.floor(Math.random() * cities.length)];
@@ -187,8 +184,7 @@
                 "Full Name": `${fName} ${lName}`,
                 "City/State": city,
                 "Phone": `+1 (${Math.floor(Math.random()*800+200)}) 555-${Math.floor(Math.random()*9000+1000)}`,
-                "SSN": generateLocalSSN(),
-                "Status": "Generated Offline (Backup)"
+                "SSN": generateLocalSSN()
             });
         } finally {
             btn.disabled = false;
@@ -208,14 +204,12 @@
         return `${Math.floor(Math.random()*899+101)}-${Math.floor(Math.random()*89+10)}-${Math.floor(Math.random()*8999+1000)}`;
     }
 
-    // --- Password Logic ---
     function generatePassword() {
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
         let pass = ""; for (let i = 0; i < 14; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
         document.getElementById('pass-val').innerText = pass;
     }
 
-    // --- Toast & Copy ---
     function copyText(text) {
         if(text.includes('*') || text.includes('Ready')) return;
         navigator.clipboard.writeText(text).then(() => {
